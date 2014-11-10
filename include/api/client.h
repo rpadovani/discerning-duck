@@ -1,0 +1,135 @@
+#ifndef API_CLIENT_H_
+#define API_CLIENT_H_
+
+#include <api/config.h>
+
+#include <atomic>
+#include <deque>
+#include <map>
+#include <string>
+#include <core/net/http/request.h>
+#include <core/net/uri.h>
+
+#include <QJsonDocument>
+
+namespace api {
+
+/**
+ * Provide a nice way to access the HTTP API.
+ *
+ * We don't want our scope's code to be mixed together with HTTP and JSON handling.
+ */
+class Client {
+public:
+    /**
+     * Abstract
+     */
+    struct Abstract {
+        std::string summary;
+        std::string textSummary;    // No HTML here
+        std::string source;
+        std::string url;
+        std::string imageUrl;
+        std::string heading;
+    };
+
+    /**
+     * Answer
+     */
+    struct Answer {
+        std::string istantAnswer;
+        std::string type;
+    };
+
+    /**
+     * Definition
+     */
+    struct Definition {
+        std::string definition;
+        std::string source;
+        std::string url;
+    };
+
+    /**
+     * Icon associated with an url
+     * Used by Result
+     */
+    struct Icon {
+        std::string url;
+        unsigned int width;
+        unsigned int height;
+    };
+
+    /**
+     * Single Result from RelatedTopics or Results
+     */
+    struct Result {
+        std::string result;
+        std::string url;
+        Icon icon;
+        std::string text;
+    };
+
+    /**
+     * RelatedTopics: array of internal links to related topics associated with
+     * Abstract
+     */
+    typedef std::deque<Result> RelatedTopics;
+
+    /**
+     * Results: array of external links associated with Abstract
+     */
+    typedef std::deque<Result> Results;
+
+    /*
+     * Query results
+     */
+    struct QueryResults {
+        Abstract abstract;
+        Answer answer;
+        Definition definition;
+        Icon icon;
+        RelatedTopics relatedTopics;
+        Results results;
+    };
+
+    Client(Config::Ptr config);
+
+    virtual ~Client() = default;
+    /*
+     * Get the result of a query
+     */
+    virtual QueryResults queryResults(const std::string &query);
+
+    /**
+     * Cancel any pending queries (this method can be called from a different thread)
+     */
+    virtual void cancel();
+
+    virtual Config::Ptr config();
+
+protected:
+    void get(const core::net::Uri::Path &path,
+             const core::net::Uri::QueryParameters &parameters,
+             QJsonDocument &root);
+    /**
+     * Progress callback that allows the query to cancel pending HTTP requests.
+     */
+    core::net::http::Request::Progress::Next progress_report(
+            const core::net::http::Request::Progress& progress);
+
+    /**
+     * Hang onto the configuration information
+     */
+    Config::Ptr config_;
+
+    /**
+     * Thread-safe cancelled flag
+     */
+    std::atomic<bool> cancelled_;
+};
+
+}
+
+#endif // API_CLIENT_H_
+

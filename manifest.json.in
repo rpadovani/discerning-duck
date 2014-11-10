@@ -1,0 +1,15 @@
+{
+    "architecture": "@CLICK_ARCH@",
+    "description": "Ask to the most discerning duck on the web: DuckDuckGo! It will have answer for every question you have",
+    "framework": "ubuntu-sdk-14.10-dev2",
+    "hooks": {
+        "discerningduck": {
+            "apparmor": "discerningduck.apparmor",
+            "scope": "discerningduck"
+        }
+    },
+    "maintainer": "Riccardo Padovani <rpadovani@ubuntu.com>",
+    "name": "com.ubuntu.developer.rpadovani.discerningduck",
+    "title": "Discerning Duck",
+    "version": "0.1"
+}
