@@ -37,7 +37,7 @@ public:
      * Answer
      */
     struct Answer {
-        std::string istantAnswer;
+        std::string instantAnswer;
         std::string type;
     };
 

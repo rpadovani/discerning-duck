@@ -58,9 +58,12 @@ Client::QueryResults Client::queryResults(const string& query) {
     // Build a URI and get the contents.
     // The fist parameter forms the path part of the URI.
     // The second parameter forms the CGI parameters.
-    get( {"/"}, {{"q", query}, {"format", "json"}, {"t", "discerningduck"}},
-                root);
-    // e.g. http://api.duckduckgo.com/?q=QUERY&format=json&t=disceningduck
+    //
+    // Until Scopes doesn't support html, ask to DuckDuckGo only plain text
+    // responses
+    get( {"/"}, {{"q", query}, {"format", "json"}, {"no_html", "1"},
+            {"t", "discerningduck"}}, root);
+    // e.g. http://api.duckduckgo.com/?q=QUERY&format=json&no_html=1&t=discerningduck
 
     QueryResults queryResults;
 
@@ -76,7 +79,7 @@ Client::QueryResults Client::queryResults(const string& query) {
     }
 
     if (variant["Answer"].toString().toStdString() != "") {
-        queryResults.answer.istantAnswer = variant["Answer"].toString().toStdString();
+        queryResults.answer.instantAnswer = variant["Answer"].toString().toStdString();
         queryResults.answer.type = variant["AnswerType"].toString().toStdString();
     }
 
@@ -86,19 +89,19 @@ Client::QueryResults Client::queryResults(const string& query) {
         queryResults.definition.url = variant["DefinitionUrl"].toString().toStdString();
     }
 
-        QVariantMap infobox = variant["Infobox"].toMap();
-        QVariantList content = infobox["content"].toList();
-        for (const QVariant &c : content) {
-            QVariantMap item = c.toMap();
-            queryResults.infobox.emplace_back(
-                Content {
-                    item["data_type"].toString().toStdString(),
-                    item["value"].toString().toStdString(),
-                    item["label"].toString().toStdString(),
-                    item["wiki_order"].toUInt()
-                }
-            );
-        }
+    QVariantMap infobox = variant["Infobox"].toMap();
+    QVariantList content = infobox["content"].toList();
+    for (const QVariant &c : content) {
+        QVariantMap item = c.toMap();
+        queryResults.infobox.emplace_back(
+            Content {
+                item["data_type"].toString().toStdString(),
+                item["value"].toString().toStdString(),
+                item["label"].toString().toStdString(),
+                item["wiki_order"].toUInt()
+            }
+        );
+    }
 
     return queryResults;
 }

@@ -11,6 +11,7 @@
 
 #include <iomanip>
 #include <sstream>
+#include <QDebug>
 
 namespace sc = unity::scopes;
 namespace alg = boost::algorithm;
@@ -55,7 +56,8 @@ const static string INFOBOX_TEMPLATE =
                 "schema-version": 1,
                 "template": {
                     "category-layout": "vertical-journal",
-                    "card-layout": "horizontal"
+                    "card-layout": "horizontal",
+                    "card-size": "small"
                 },
                 "components": {
                     "title": "title",
@@ -63,28 +65,24 @@ const static string INFOBOX_TEMPLATE =
                 }
             }
         )";
+
 /**
- * Define the larger "current weather" layout.
- *
- * The icons are larger.
+ * Answer template, for simple questions with a simple answer
  */
-const static string CITY_TEMPLATE =
-        R"(
-{
-        "schema-version": 1,
-        "template": {
-        "category-layout": "grid",
-        "card-size": "medium"
-        },
-        "components": {
-        "title": "title",
-        "art" : {
-        "field": "art"
-        },
-        "subtitle": "subtitle"
+const static string ANSWER_TEMPLATE =
+    R"(
+        {
+            "schema-version": 1,
+            "template": {
+                    "category-layout": "vertical-journal",
+                "card-layout": "horizontal"
+            },
+            "components": {
+                "title": "title",
+                "summary": "description"
+            }
         }
-        }
-        )";
+    )";
 
 Query::Query(const sc::CannedQuery &query, const sc::SearchMetadata &metadata,
              Config::Ptr config) :
@@ -118,7 +116,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
         ss << queryResults.abstract.heading;
 
         // Register a category for the abstract
-        auto abstract_cat = reply->register_category("queryResults", ss.str(), "",
+        auto abstract_cat = reply->register_category("abstract", ss.str(), "",
                                                      sc::CategoryRenderer(ABSTRACT_TEMPLATE));
 
         {
@@ -149,20 +147,47 @@ void Query::run(sc::SearchReplyProxy const& reply) {
         auto infobox_cat = reply->register_category("infobox",
                                                      _("Other informations"), "", sc::CategoryRenderer(INFOBOX_TEMPLATE));
 
-        // For each of the forecast days
-        for (const auto &content : queryResults.infobox) {
-            // Create a result
-            sc::CategorisedResult res(infobox_cat);
+        {
+            // For each of the forecast days
+            for (const auto &content : queryResults.infobox) {
+                // Create a result
+                sc::CategorisedResult res(infobox_cat);
+
+                // We must have a URI
+                res.set_uri(to_string(content.wiki_order));
+
+                // Build the description for the result
+                res.set_title(content.label);
+
+                // Set the rest of the attributes
+                res["description"] = content.value;
+
+                // Push the result
+                if (!reply->push(res)) {
+                    // If we fail to push, it means the query has been cancelled.
+                    // So don't continue;
+                    return;
+                }
+            }
+        }
+
+        /**
+         * Answer section
+         */
+        // Register a category for answer
+        auto answer_cat = reply->register_category("answer", _("ciao"), "",
+                sc::CategoryRenderer(ANSWER_TEMPLATE));
+
+        {
+            // Create a single result for the answer
+            sc::CategorisedResult res(answer_cat);
 
             // We must have a URI
-            res.set_uri(to_string(content.wiki_order));
+            res.set_uri("http://www.google.com");
 
-            // Build the description for the result
-            res.set_title(content.label);
+            res.set_title("Calc");
 
-            // Set the rest of the attributes
-            res["description"] = content.value;
-
+            res["description"] = queryResults.answer.instantAnswer;
             // Push the result
             if (!reply->push(res)) {
                 // If we fail to push, it means the query has been cancelled.
