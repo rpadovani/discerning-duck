@@ -74,8 +74,9 @@ const static string ANSWER_TEMPLATE =
         {
             "schema-version": 1,
             "template": {
-                    "category-layout": "vertical-journal",
-                "card-layout": "horizontal"
+                "category-layout": "vertical-journal",
+                "card-layout": "horizontal",
+                "card-size": "large"
             },
             "components": {
                 "title": "title",
@@ -115,52 +116,26 @@ void Query::run(sc::SearchReplyProxy const& reply) {
         stringstream ss(stringstream::in | stringstream::out);
         ss << queryResults.abstract.heading;
 
-        // Register a category for the abstract
-        auto abstract_cat = reply->register_category("abstract", ss.str(), "",
-                                                     sc::CategoryRenderer(ABSTRACT_TEMPLATE));
+        if (!queryResults.abstract.heading.empty()) {
+            // Register a category for the abstract
+            auto abstract_cat = reply->register_category("abstract", ss.str(), "",
+                    sc::CategoryRenderer(ABSTRACT_TEMPLATE));
 
-        {
-            // Create a single result for the current weather category
-            sc::CategorisedResult res(abstract_cat);
-
-            // We must have a URI
-            res.set_uri(queryResults.abstract.heading);
-
-            // Build up the description for the current weather
-            stringstream ss(stringstream::in | stringstream::out);
-            ss << queryResults.abstract.heading;
-            res.set_title(ss.str());
-
-            // Set the rest of the attributes, art, description, etc
-            res.set_art(queryResults.abstract.imageUrl);
-            res["summary"] = queryResults.abstract.textSummary;
-
-            // Push the result
-            if (!reply->push(res)) {
-                // If we fail to push, it means the query has been cancelled.
-                // So don't continue;
-                return;
-            }
-        }
-
-        // Register a category for the infobox
-        auto infobox_cat = reply->register_category("infobox",
-                                                     _("Other informations"), "", sc::CategoryRenderer(INFOBOX_TEMPLATE));
-
-        {
-            // For each of the forecast days
-            for (const auto &content : queryResults.infobox) {
-                // Create a result
-                sc::CategorisedResult res(infobox_cat);
+            {
+                // Create a single result for the current weather category
+                sc::CategorisedResult res(abstract_cat);
 
                 // We must have a URI
-                res.set_uri(to_string(content.wiki_order));
+                res.set_uri(queryResults.abstract.heading);
 
-                // Build the description for the result
-                res.set_title(content.label);
+                // Build up the description for the current weather
+                stringstream ss(stringstream::in | stringstream::out);
+                ss << queryResults.abstract.heading;
+                res.set_title(ss.str());
 
-                // Set the rest of the attributes
-                res["description"] = content.value;
+                // Set the rest of the attributes, art, description, etc
+                res.set_art(queryResults.abstract.imageUrl);
+                res["summary"] = queryResults.abstract.textSummary;
 
                 // Push the result
                 if (!reply->push(res)) {
@@ -171,11 +146,41 @@ void Query::run(sc::SearchReplyProxy const& reply) {
             }
         }
 
+        if (!queryResults.infobox.empty()) {
+            // Register a category for the infobox
+            auto infobox_cat = reply->register_category("infobox",
+                    _("Other informations"), "", sc::CategoryRenderer(INFOBOX_TEMPLATE));
+
+            {
+                // For each of the forecast days
+                for (const auto &content : queryResults.infobox) {
+                    // Create a result
+                    sc::CategorisedResult res(infobox_cat);
+
+                    // We must have a URI
+                    res.set_uri(to_string(content.wiki_order));
+
+                    // Build the description for the result
+                    res.set_title(content.label);
+
+                    // Set the rest of the attributes
+                    res["description"] = content.value;
+
+                    // Push the result
+                    if (!reply->push(res)) {
+                        // If we fail to push, it means the query has been cancelled.
+                        // So don't continue;
+                        return;
+                    }
+                }
+            }
+        }
+
         /**
          * Answer section
          */
         // Register a category for answer
-        auto answer_cat = reply->register_category("answer", _("ciao"), "",
+        auto answer_cat = reply->register_category("answer", _("Answer"), "",
                 sc::CategoryRenderer(ANSWER_TEMPLATE));
 
         {
@@ -183,9 +188,9 @@ void Query::run(sc::SearchReplyProxy const& reply) {
             sc::CategorisedResult res(answer_cat);
 
             // We must have a URI
-            res.set_uri("http://www.google.com");
+            res.set_uri(queryResults.answer.type);
 
-            res.set_title("Calc");
+            res.set_title(queryResults.answer.type);
 
             res["description"] = queryResults.answer.instantAnswer;
             // Push the result
