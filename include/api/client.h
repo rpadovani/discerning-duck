@@ -51,6 +51,16 @@ public:
     };
 
     /**
+     * Content it's used by Infobox to load a single information
+     */
+    struct Content {
+        std::string data_type; // Never found something different from string here, but anyway...
+        std::string value;
+        std::string label;
+        unsigned int wiki_order;
+    };
+
+    /**
      * Icon associated with an url
      * Used by Result
      */
@@ -71,6 +81,11 @@ public:
     };
 
     /**
+     * Infobox: array of informations about an abstract
+     */
+    typedef std::deque<Content> Infobox;
+
+    /**
      * RelatedTopics: array of internal links to related topics associated with
      * Abstract
      */
@@ -88,7 +103,7 @@ public:
         Abstract abstract;
         Answer answer;
         Definition definition;
-        Icon icon;
+        Infobox infobox;
         RelatedTopics relatedTopics;
         Results results;
     };

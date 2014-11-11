@@ -74,71 +74,36 @@ Client::QueryResults Client::queryResults(const string& query) {
         queryResults.abstract.imageUrl = variant["Image"].toString().toStdString();
         queryResults.abstract.heading = variant["Heading"].toString().toStdString();
     }
-    /*QVariantMap sys = variant["sys"].toMap();
-    result.city.id = sys["id"].toUInt();
-    result.city.name = variant["name"].toString().toStdString();
-    result.city.country = sys["country"].toString().toStdString();
 
-    // Read the weather
-    QVariantMap weather = variant["weather"].toList().first().toMap();
-    result.weather.id = weather["id"].toUInt();
-    result.weather.main = weather["main"].toString().toStdString();
-    result.weather.description = weather["description"].toString().toStdString();
-    result.weather.icon = "http://openweathermap.org/img/w/"
-            + weather["icon"].toString().toStdString() + ".png";
-
-    // Read the temps
-    QVariantMap main = variant["main"].toMap();
-    result.weather.temp.cur = main["temp"].toDouble();
-    result.weather.temp.max = main["temp_max"].toDouble();
-    result.weather.temp.min = main["temp_min"].toDouble();*/
-    return queryResults;
-}
-
-/*Client::Forecast Client::forecast_daily(const string& query, unsigned int cnt) {
-    QJsonDocument root;
-
-    // Build a URI and get the contents
-    // The fist parameter forms the path part of the URI.
-    // The second parameter forms the CGI parameters.
-    get( { "data", "2.5", "forecast", "daily" }, { { "q", query }, { "units",
-                                                                     "metric" }, { "cnt", to_string(cnt) }
-         }, root);
-    // e.g. http://api.openweathermap.org/data/2.5/forecast/daily/?q=QUERY&units=metric&cnt=7
-
-    Forecast result;
-
-    QVariantMap variant = root.toVariant().toMap();
-
-    // Read out the city we found
-    QVariantMap city = variant["city"].toMap();
-    result.city.id = city["id"].toUInt();
-    result.city.name = city["name"].toString().toStdString();
-    result.city.country = city["country"].toString().toStdString();
-
-    // Iterate through the weather data
-    for (const QVariant &i : variant["list"].toList()) {
-        QVariantMap item = i.toMap();
-
-        // Extract the first weather item
-        QVariantList weather_list = item["weather"].toList();
-        QVariantMap weather = weather_list.first().toMap();
-
-        // Extract the temperature data
-        QVariantMap temp = item["temp"].toMap();
-
-        // Add a result to the weather list
-        result.weather.emplace_back(
-                    Weather { weather["id"].toUInt(), weather["main"].toString().toStdString(),
-                              weather["description"].toString().toStdString(),
-                              "http://openweathermap.org/img/w/"
-                              + weather["icon"].toString().toStdString() + ".png", Temp {
-                                  temp["max"].toDouble(), temp["min"].toDouble(),
-                                  0.0 } });
+    if (variant["Answer"].toString().toStdString() != "") {
+        queryResults.answer.istantAnswer = variant["Answer"].toString().toStdString();
+        queryResults.answer.type = variant["AnswerType"].toString().toStdString();
     }
 
-    return result;
-}*/
+    if (variant["Definition"].toString().toStdString() != "") {
+        queryResults.definition.definition = variant["Definition"].toString().toStdString();
+        queryResults.definition.source = variant["DefinitionSource"].toString().toStdString();
+        queryResults.definition.url = variant["DefinitionUrl"].toString().toStdString();
+    }
+
+    if (variant["Infobox"].toVariant().toList()) {
+        QVariantList infobox = variant["Infobox"].toVariant().toList();
+        QVariantList content = infobox["content"].toVariant().toList();
+        for (const QVariant &c : content) {
+            QVariantMap item = c.toMap();
+            queryResults.infobox.emplace_back(
+                Content {
+                    item["data_type"].toString().toStdString(),
+                    item["value"].toString().toStdString(),
+                    item["label"].toString().toStdString(),
+                    item["wiki_order"].toUInt()
+                }
+            );
+        }
+    }
+
+    return queryResults;
+}
 
 http::Request::Progress::Next Client::progress_report(
         const http::Request::Progress&) {
