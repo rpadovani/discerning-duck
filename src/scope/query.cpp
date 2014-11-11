@@ -32,9 +32,9 @@ const static string ABSTRACT_TEMPLATE =
 {
         "schema-version": 1,
         "template": {
-            "category-layout": "vertical-journal",
-            "card-layout": "vertical",
-            "card-size": "38"
+            "category-layout": "grid",
+            "card-layout": "horizontal",
+            "card-size": "large"
         },
         "components": {
             "title": "title",
@@ -46,6 +46,23 @@ const static string ABSTRACT_TEMPLATE =
         }
         )";
 
+/**
+ * Infobox template, for a lot of informations :-)
+ */
+const static string INFOBOX_TEMPLATE =
+        R"(
+            {
+                "schema-version": 1,
+                "template": {
+                    "category-layout": "vertical-journal",
+                    "card-layout": "horizontal"
+                },
+                "components": {
+                    "title": "title",
+                    "summary": "description"
+                }
+            }
+        )";
 /**
  * Define the larger "current weather" layout.
  *
@@ -100,7 +117,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
         stringstream ss(stringstream::in | stringstream::out);
         ss << queryResults.abstract.heading;
 
-        // Register a category for the current weather, with the title we just built
+        // Register a category for the abstract
         auto abstract_cat = reply->register_category("queryResults", ss.str(), "",
                                                      sc::CategoryRenderer(ABSTRACT_TEMPLATE));
 
@@ -128,39 +145,23 @@ void Query::run(sc::SearchReplyProxy const& reply) {
             }
         }
 
-        /*Client::Forecast forecast;
-        if (query_string.empty()) {
-            // If there is no search string, get the forecast for London
-            forecast = client_.forecast_daily("London,uk");
-        } else {
-            // otherwise, get the forecast for the search string
-            forecast = client_.forecast_daily(query_string);
-        }
-
-        // Register a category for the forecast
-        auto forecast_cat = reply->register_category("forecast",
-                                                     _("7 day forecast"), "", sc::CategoryRenderer(WEATHER_TEMPLATE));
+        // Register a category for the infobox
+        auto infobox_cat = reply->register_category("infobox",
+                                                     _("Other informations"), "", sc::CategoryRenderer(INFOBOX_TEMPLATE));
 
         // For each of the forecast days
-        for (const auto &weather : forecast.weather) {
+        for (const auto &content : queryResults.infobox) {
             // Create a result
-            sc::CategorisedResult res(forecast_cat);
+            sc::CategorisedResult res(infobox_cat);
 
             // We must have a URI
-            res.set_uri(to_string(weather.id));
+            res.set_uri(to_string(content.wiki_order));
 
             // Build the description for the result
-            stringstream ss(stringstream::in | stringstream::out);
-            ss << setprecision(3) << weather.temp.max;
-            ss << "°C to ";
-            ss << setprecision(3) << weather.temp.min;
-            ss << "°C";
-            res.set_title(ss.str());
+            res.set_title(content.label);
 
             // Set the rest of the attributes
-            res.set_art(weather.icon);
-            res["subtitle"] = weather.description;
-            res["description"] = "A description of the result";
+            res["description"] = content.value;
 
             // Push the result
             if (!reply->push(res)) {
@@ -169,7 +170,6 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                 return;
             }
         }
-*/
     } catch (domain_error &e) {
         // Handle exceptions being thrown by the client API
         cerr << e.what() << endl;

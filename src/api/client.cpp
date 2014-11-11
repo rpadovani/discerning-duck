@@ -86,9 +86,8 @@ Client::QueryResults Client::queryResults(const string& query) {
         queryResults.definition.url = variant["DefinitionUrl"].toString().toStdString();
     }
 
-    if (variant["Infobox"].toVariant().toList()) {
-        QVariantList infobox = variant["Infobox"].toVariant().toList();
-        QVariantList content = infobox["content"].toVariant().toList();
+        QVariantMap infobox = variant["Infobox"].toMap();
+        QVariantList content = infobox["content"].toList();
         for (const QVariant &c : content) {
             QVariantMap item = c.toMap();
             queryResults.infobox.emplace_back(
@@ -100,7 +99,6 @@ Client::QueryResults Client::queryResults(const string& query) {
                 }
             );
         }
-    }
 
     return queryResults;
 }
