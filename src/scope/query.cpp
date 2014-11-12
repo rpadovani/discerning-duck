@@ -22,49 +22,51 @@ using namespace scope;
 
 
 /**
- * Define the layout for the forecast results
+ * Define the layout for the abstract responses
  *
- * The icon size is small, and ask for the card layout
- * itself to be horizontal. I.e. the text will be placed
- * next to the image.
+ * The card is large, with a little photo, to have the maximum number of
+ * information available
  */
 const static string ABSTRACT_TEMPLATE =
-        R"(
-{
-        "schema-version": 1,
-        "template": {
-            "category-layout": "grid",
-            "card-layout": "horizontal",
-            "card-size": "large"
-        },
-        "components": {
-            "title": "title",
-            "art" : {
-                "field": "art"
+    R"(
+        {
+            "schema-version": 1,
+            "template": {
+                "category-layout": "grid",
+                "card-layout": "horizontal",
+                "card-size": "large"
             },
-            "summary": "summary"
+            "components": {
+                "title": "title",
+                "art" : {
+                    "field": "art"
+                },
+                "summary": "summary"
             }
         }
-        )";
+    )";
 
 /**
  * Infobox template, for a lot of informations :-)
+ *
+ * Cards are little, with only essential informations: the name of the data,
+ * and the data itself
  */
 const static string INFOBOX_TEMPLATE =
-        R"(
-            {
-                "schema-version": 1,
-                "template": {
-                    "category-layout": "vertical-journal",
-                    "card-layout": "horizontal",
-                    "card-size": "small"
-                },
-                "components": {
-                    "title": "title",
-                    "summary": "description"
-                }
+    R"(
+        {
+            "schema-version": 1,
+            "template": {
+                "category-layout": "vertical-journal",
+                "card-layout": "horizontal",
+                "card-size": "small"
+            },
+            "components": {
+                "title": "title",
+                "summary": "summary"
             }
-        )";
+        }
+    )";
 
 /**
  * Answer template, for simple questions with a simple answer
@@ -94,7 +96,6 @@ void Query::cancelled() {
     client_.cancel();
 }
 
-
 void Query::run(sc::SearchReplyProxy const& reply) {
     try {
         // Start by getting information about the query
@@ -105,35 +106,33 @@ void Query::run(sc::SearchReplyProxy const& reply) {
 
         Client::QueryResults queryResults;
         if (query_string.empty()) {
-            // If the string is empty, get the current weather for London
+            // If the string is empty, get informations about DuckDuckGo
+            // TODO: create a better default page
             queryResults = client_.queryResults("DuckDuckGo");
         } else {
-            // otherwise, get the current weather for the search string
+            // otherwise, process the query
             queryResults = client_.queryResults(query_string);
         }
 
-        // Build up the title
-        stringstream ss(stringstream::in | stringstream::out);
-        ss << queryResults.abstract.heading;
-
+        /**
+         *  Abstract
+         */
         if (!queryResults.abstract.heading.empty()) {
+            // Build up the title
+            stringstream ss(stringstream::in | stringstream::out);
+            ss << queryResults.abstract.heading;
+
             // Register a category for the abstract
             auto abstract_cat = reply->register_category("abstract", ss.str(), "",
                     sc::CategoryRenderer(ABSTRACT_TEMPLATE));
 
             {
-                // Create a single result for the current weather category
+                // Create a single result for the current abstract
                 sc::CategorisedResult res(abstract_cat);
 
-                // We must have a URI
+                // Set results
                 res.set_uri(queryResults.abstract.heading);
-
-                // Build up the description for the current weather
-                stringstream ss(stringstream::in | stringstream::out);
-                ss << queryResults.abstract.heading;
-                res.set_title(ss.str());
-
-                // Set the rest of the attributes, art, description, etc
+                res.set_title(queryResults.abstract.heading);
                 res.set_art(queryResults.abstract.imageUrl);
                 res["summary"] = queryResults.abstract.textSummary;
 
@@ -146,25 +145,24 @@ void Query::run(sc::SearchReplyProxy const& reply) {
             }
         }
 
+        /**
+         * Infobox
+         */
         if (!queryResults.infobox.empty()) {
             // Register a category for the infobox
             auto infobox_cat = reply->register_category("infobox",
                     _("Other informations"), "", sc::CategoryRenderer(INFOBOX_TEMPLATE));
 
             {
-                // For each of the forecast days
+                // For each of the informations in the infobox, create a card
                 for (const auto &content : queryResults.infobox) {
                     // Create a result
                     sc::CategorisedResult res(infobox_cat);
 
-                    // We must have a URI
+                    // Set informations
                     res.set_uri(to_string(content.wiki_order));
-
-                    // Build the description for the result
                     res.set_title(content.label);
-
-                    // Set the rest of the attributes
-                    res["description"] = content.value;
+                    res["summary"] = content.value;
 
                     // Push the result
                     if (!reply->push(res)) {
@@ -177,27 +175,28 @@ void Query::run(sc::SearchReplyProxy const& reply) {
         }
 
         /**
-         * Answer section
+         * Answer
          */
-        // Register a category for answer
-        auto answer_cat = reply->register_category("answer", _("Answer"), "",
-                sc::CategoryRenderer(ANSWER_TEMPLATE));
+        if (!queryResults.answer.type.isEmpty()) {
+            // Register a category for answer
+            auto answer_cat = reply->register_category("answer", _("Answer"), "",
+                    sc::CategoryRenderer(ANSWER_TEMPLATE));
 
-        {
-            // Create a single result for the answer
-            sc::CategorisedResult res(answer_cat);
+            {
+                // Create a single result for the answer
+                sc::CategorisedResult res(answer_cat);
 
-            // We must have a URI
-            res.set_uri(queryResults.answer.type);
+                // We must have a URI
+                res.set_uri(queryResults.answer.type);
+                res.set_title(queryResults.answer.type);
+                res["description"] = queryResults.answer.instantAnswer;
 
-            res.set_title(queryResults.answer.type);
-
-            res["description"] = queryResults.answer.instantAnswer;
-            // Push the result
-            if (!reply->push(res)) {
-                // If we fail to push, it means the query has been cancelled.
-                // So don't continue;
-                return;
+                // Push the result
+                if (!reply->push(res)) {
+                    // If we fail to push, it means the query has been cancelled.
+                    // So don't continue;
+                    return;
+                }
             }
         }
     } catch (domain_error &e) {
@@ -206,4 +205,3 @@ void Query::run(sc::SearchReplyProxy const& reply) {
         reply->error(current_exception());
     }
 }
-

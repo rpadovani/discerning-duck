@@ -67,7 +67,7 @@ Client::QueryResults Client::queryResults(const string& query) {
 
     QueryResults queryResults;
 
-    // Read out the city we found
+    // Read out the abstract we found
     QVariantMap variant = root.toVariant().toMap();
     if (variant["Abstract"].toString().toStdString() != "") {
         queryResults.abstract.summary = variant["Abstract"].toString().toStdString();
@@ -78,17 +78,20 @@ Client::QueryResults Client::queryResults(const string& query) {
         queryResults.abstract.heading = variant["Heading"].toString().toStdString();
     }
 
+    // Read out the answer we found
     if (variant["Answer"].toString().toStdString() != "") {
         queryResults.answer.instantAnswer = variant["Answer"].toString().toStdString();
         queryResults.answer.type = variant["AnswerType"].toString().toStdString();
     }
 
+    // Read out the definition we found
     if (variant["Definition"].toString().toStdString() != "") {
         queryResults.definition.definition = variant["Definition"].toString().toStdString();
         queryResults.definition.source = variant["DefinitionSource"].toString().toStdString();
         queryResults.definition.url = variant["DefinitionUrl"].toString().toStdString();
     }
 
+    // Read out the infobox, if any
     QVariantMap infobox = variant["Infobox"].toMap();
     QVariantList content = infobox["content"].toList();
     for (const QVariant &c : content) {
