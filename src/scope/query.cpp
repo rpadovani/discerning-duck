@@ -177,7 +177,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
         /**
          * Answer
          */
-        if (!queryResults.answer.type.isEmpty()) {
+        if (!queryResults.answer.type.empty()) {
             // Register a category for answer
             auto answer_cat = reply->register_category("answer", _("Answer"), "",
                     sc::CategoryRenderer(ANSWER_TEMPLATE));
