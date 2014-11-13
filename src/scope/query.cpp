@@ -87,6 +87,25 @@ const static string ANSWER_TEMPLATE =
         }
     )";
 
+const static string CATEGORIES_TEMPLATE =
+    R"(
+        {
+            "schema-version": 1,
+            "template": {
+                "category-layout": "vertical-journal",
+                "card-layout": "horizontal",
+                "card-size": "large"
+            },
+            "components": {
+                "title": "title",
+                "summary": "summary",
+                "art": {
+                    "field": "art"
+                }
+            }
+        }
+    )";
+
 Query::Query(const sc::CannedQuery &query, const sc::SearchMetadata &metadata,
              Config::Ptr config) :
     sc::SearchQueryBase(query, metadata), client_(config) {
@@ -117,7 +136,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
         /**
          *  Abstract
          */
-        if (!queryResults.abstract.heading.empty()) {
+        if (!queryResults.abstract.textSummary.empty()) {
             // Build up the title
             stringstream ss(stringstream::in | stringstream::out);
             ss << queryResults.abstract.heading;
@@ -199,6 +218,37 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                 }
             }
         }
+
+        /**
+         * Category
+         */
+        //if (!queryResults.empty()) {
+            // Register a category for the infobox
+            auto category_cat = reply->register_category("category",
+                    _("Lists"), "", sc::CategoryRenderer(CATEGORIES_TEMPLATE));
+
+            {
+                // For each of the informations in the infobox, create a card
+                for (const auto &content : queryResults.relatedTopics) {
+                    // Create a result
+                    sc::CategorisedResult res(category_cat);
+
+                    // Set informations
+                    res.set_uri(content.url);
+                    res.set_title("SETTITLE");
+                    res["summary"] = content.text;
+                    res.set_art(content.icon.url);
+
+                    // Push the result
+                    if (!reply->push(res)) {
+                        // If we fail to push, it means the query has been cancelled.
+                        // So don't continue;
+                        return;
+                    }
+                }
+            }
+        //}
+
     } catch (domain_error &e) {
         // Handle exceptions being thrown by the client API
         cerr << e.what() << endl;

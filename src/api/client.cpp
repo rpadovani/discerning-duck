@@ -69,29 +69,20 @@ Client::QueryResults Client::queryResults(const string& query) {
 
     // Read out the abstract we found
     QVariantMap variant = root.toVariant().toMap();
-    if (variant["Abstract"].toString().toStdString() != "") {
-        queryResults.abstract.summary = variant["Abstract"].toString().toStdString();
-        queryResults.abstract.textSummary = variant["AbstractText"].toString().toStdString();
-        queryResults.abstract.source = variant["AbstractSource"].toString().toStdString();
-        queryResults.abstract.url = variant["AbstractUrl"].toString().toStdString();
-        queryResults.abstract.imageUrl = variant["Image"].toString().toStdString();
-        queryResults.abstract.heading = variant["Heading"].toString().toStdString();
-    }
+    queryResults.abstract.summary = variant["Abstract"].toString().toStdString();
+    queryResults.abstract.textSummary = variant["AbstractText"].toString().toStdString();
+    queryResults.abstract.source = variant["AbstractSource"].toString().toStdString();
+    queryResults.abstract.url = variant["AbstractUrl"].toString().toStdString();
+    queryResults.abstract.imageUrl = variant["Image"].toString().toStdString();
+    queryResults.abstract.heading = variant["Heading"].toString().toStdString();
 
-    // Read out the answer we found
-    if (variant["Answer"].toString().toStdString() != "") {
-        queryResults.answer.instantAnswer = variant["Answer"].toString().toStdString();
-        queryResults.answer.type = variant["AnswerType"].toString().toStdString();
-    }
+    queryResults.answer.instantAnswer = variant["Answer"].toString().toStdString();
+    queryResults.answer.type = variant["AnswerType"].toString().toStdString();
 
-    // Read out the definition we found
-    if (variant["Definition"].toString().toStdString() != "") {
-        queryResults.definition.definition = variant["Definition"].toString().toStdString();
-        queryResults.definition.source = variant["DefinitionSource"].toString().toStdString();
-        queryResults.definition.url = variant["DefinitionUrl"].toString().toStdString();
-    }
+    queryResults.definition.definition = variant["Definition"].toString().toStdString();
+    queryResults.definition.source = variant["DefinitionSource"].toString().toStdString();
+    queryResults.definition.url = variant["DefinitionUrl"].toString().toStdString();
 
-    // Read out the infobox, if any
     QVariantMap infobox = variant["Infobox"].toMap();
     QVariantList content = infobox["content"].toList();
     for (const QVariant &c : content) {
@@ -102,6 +93,24 @@ Client::QueryResults Client::queryResults(const string& query) {
                 item["value"].toString().toStdString(),
                 item["label"].toString().toStdString(),
                 item["wiki_order"].toUInt()
+            }
+        );
+    }
+
+    QVariantList related = variant["RelatedTopics"].toList();
+    for (const QVariant &r : related) {
+        QVariantMap result = r.toMap();
+        QVariantMap icon = result["Icon"].toMap();
+        queryResults.relatedTopics.emplace_back(
+            Result {
+                result["Result"].toString().toStdString(),
+                result["FirstURL"].toString().toStdString(),
+                Icon {
+                    icon["URL"].toString().toStdString(),
+                    icon["Height"].toUInt(),
+                    icon["Width"].toUInt()
+                },
+                result["Text"].toString().toStdString()
             }
         );
     }
