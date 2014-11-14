@@ -83,6 +83,8 @@ Client::QueryResults Client::queryResults(const string& query) {
     queryResults.definition.source = variant["DefinitionSource"].toString().toStdString();
     queryResults.definition.url = variant["DefinitionUrl"].toString().toStdString();
 
+    queryResults.type = variant["Type"].toString().toStdString();
+
     QVariantMap infobox = variant["Infobox"].toMap();
     QVariantList content = infobox["content"].toList();
     for (const QVariant &c : content) {

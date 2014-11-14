@@ -107,6 +107,7 @@ public:
             Infobox infobox;
             RelatedTopics relatedTopics;
             Results results;
+            std::string type;
 
             bool isEmpty() {
                 return abstract.heading.empty() &&

@@ -83,11 +83,15 @@ const static string ANSWER_TEMPLATE =
             },
             "components": {
                 "title": "title",
-                "summary": "description"
+                "summary": "summary"
             }
         }
     )";
 
+/**
+ * This template is for list of things related to a topic
+ * The response type has to be C
+ */
 const static string CATEGORIES_TEMPLATE =
     R"(
         {
@@ -107,10 +111,32 @@ const static string CATEGORIES_TEMPLATE =
         }
     )";
 
+/**
+ *
+ */
+
 /*
  * 404 page - Nothing return from the query
  */
 const static string EMPTY_TEMPLATE =
+    R"(
+        {
+            "schema-version": 1,
+            "template": {
+                "category-layout": "grid",
+                "card-size": "large"
+            },
+            "components": {
+                "title": "title",
+                "summary": "summary"
+            }
+        }
+    )";
+
+/*
+ * Footer
+ */
+const static string FOOTER_TEMPLATE =
     R"(
         {
             "schema-version": 1,
@@ -169,7 +195,9 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                 res.set_title(queryResults.abstract.heading);
                 res.set_art(queryResults.abstract.imageUrl);
                 res["summary"] = queryResults.abstract.textSummary;
-                res["subtitle"] = "Source: " + queryResults.abstract.source;
+                if (queryResults.abstract.source != "") {
+                    res["subtitle"] = "Source: " + queryResults.abstract.source;
+                }
 
                 // Push the result
                 if (!reply->push(res)) {
@@ -218,7 +246,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
          */
         if (!queryResults.answer.type.empty()) {
             // Register a category for answer
-            auto answer_cat = reply->register_category("answer", _("Answer"), "",
+            auto answer_cat = reply->register_category("answer", "", "",
                     sc::CategoryRenderer(ANSWER_TEMPLATE));
 
             {
@@ -228,7 +256,10 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                 // We must have a URI
                 res.set_uri(queryResults.answer.type);
                 res.set_title(queryResults.answer.type);
-                res["description"] = queryResults.answer.instantAnswer;
+                res["summary"] = queryResults.answer.instantAnswer;
+                if (queryResults.abstract.source != "") {
+                    res["subtitle"] = "Source: " + queryResults.abstract.source;
+                }
 
                 // Push the result
                 if (!reply->push(res)) {
@@ -243,13 +274,13 @@ void Query::run(sc::SearchReplyProxy const& reply) {
          * Category
          * We don't want this if we already have an infobox
          */
-        if (queryResults.infobox.empty()) {
+        if (queryResults.infobox.empty() && queryResults.type == "C") {
             // Register a category for the infobox
             auto category_cat = reply->register_category("category",
                     queryResults.abstract.heading, "", sc::CategoryRenderer(CATEGORIES_TEMPLATE));
 
             {
-                // For each of the informations in the infobox, create a card
+                // For each element of the category
                 for (const auto &content : queryResults.relatedTopics) {
                     // Create a result
                     sc::CategorisedResult res(category_cat);
@@ -262,6 +293,9 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                     res.set_uri(content.url);
                     res["summary"] = content.text.substr(pos+2);
                     res.set_art(content.icon.url);
+
+                    // Only for the preview
+                    res["subtitle"] = "Source: " + queryResults.abstract.source;
 
                     // Push the result
                     if (!reply->push(res)) {
@@ -277,7 +311,6 @@ void Query::run(sc::SearchReplyProxy const& reply) {
          * 404: nothing found!
          */
         if (queryResults.isEmpty()) {
-            // Register a category for the infobox
             auto empty_cat = reply->register_category("empty",
                     _("Nothing found"), "", sc::CategoryRenderer(EMPTY_TEMPLATE));
 
@@ -296,6 +329,30 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                     // So don't continue;
                     return;
                 }
+            }
+        }
+
+        /**
+         * Footer: all credits to DuckDuckGo!
+         */
+        // Register a category for the footer
+        auto footer_cat = reply->register_category("footer",
+                _(""), "", sc::CategoryRenderer(EMPTY_TEMPLATE));
+
+        {
+            // Create a result
+            sc::CategorisedResult res(footer_cat);
+
+            // Set informations
+            res.set_uri("DuckDuckGo");
+            res.set_title("ALPHA VERSION!");
+            res["summary"] = "All data come from DuckDuckGo API";
+
+            // Push the result
+            if (!reply->push(res)) {
+                // If we fail to push, it means the query has been cancelled.
+                // So don't continue;
+                return;
             }
         }
 
