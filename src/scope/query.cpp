@@ -107,6 +107,24 @@ const static string CATEGORIES_TEMPLATE =
         }
     )";
 
+/*
+ * 404 page - Nothing return from the query
+ */
+const static string EMPTY_TEMPLATE =
+    R"(
+        {
+            "schema-version": 1,
+            "template": {
+                "category-layout": "grid",
+                "card-size": "large"
+            },
+            "components": {
+                "title": "title",
+                "summary": "summary"
+            }
+        }
+    )";
+
 Query::Query(const sc::CannedQuery &query, const sc::SearchMetadata &metadata,
              Config::Ptr config) :
     sc::SearchQueryBase(query, metadata), client_(config) {
@@ -238,7 +256,6 @@ void Query::run(sc::SearchReplyProxy const& reply) {
 
                     // Set informations
                     res.set_uri(content.url);
-                    res.set_title("SETTITLE");
                     res["summary"] = content.text;
                     res.set_art(content.icon.url);
 
@@ -248,6 +265,32 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                         // So don't continue;
                         return;
                     }
+                }
+            }
+        }
+
+        /**
+         * 404: nothing found!
+         */
+        if (queryResults.isEmpty()) {
+            // Register a category for the infobox
+            auto empty_cat = reply->register_category("empty",
+                    _("Nothing found"), "", sc::CategoryRenderer(EMPTY_TEMPLATE));
+
+            {
+                // Create a result
+                sc::CategorisedResult res(empty_cat);
+
+                // Set informations
+                res.set_uri("1");
+                res.set_title("Nothing here");
+                res["summary"] = "Unfortunately, I'm not a search engine, but only a Discerning Duck - I cannot provide you results, but only answers. Please try another search :-)";
+
+                // Push the result
+                if (!reply->push(res)) {
+                    // If we fail to push, it means the query has been cancelled.
+                    // So don't continue;
+                    return;
                 }
             }
         }

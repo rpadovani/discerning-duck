@@ -99,13 +99,23 @@ public:
     /*
      * Query results
      */
-    struct QueryResults {
-        Abstract abstract;
-        Answer answer;
-        Definition definition;
-        Infobox infobox;
-        RelatedTopics relatedTopics;
-        Results results;
+    public: class QueryResults {
+        public:
+            Abstract abstract;
+            Answer answer;
+            Definition definition;
+            Infobox infobox;
+            RelatedTopics relatedTopics;
+            Results results;
+
+            bool isEmpty() {
+                return abstract.heading.empty() &&
+                    answer.type.empty() &&
+                    definition.definition.empty() &&
+                    infobox.empty() &&
+                    relatedTopics.empty() &&
+                    results.empty();
+            }
     };
 
     Client(Config::Ptr config);
