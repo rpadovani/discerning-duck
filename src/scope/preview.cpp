@@ -62,7 +62,7 @@ void Preview::run(sc::PreviewReplyProxy const& reply) {
     sc::VariantBuilder builder;
     builder.add_tuple({
         {"id", sc::Variant("open")},
-        {"label", sc::Variant("See all")},
+        {"label", sc::Variant("See more")},
         {"uri", result["uri"]}
     });
     actions.add_attribute_value("actions", builder.end());

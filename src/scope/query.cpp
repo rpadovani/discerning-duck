@@ -168,7 +168,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
         if (!queryResults.infobox.empty()) {
             // Register a category for the infobox
             auto infobox_cat = reply->register_category("infobox",
-                    _("Other informations"), "", sc::CategoryRenderer(INFOBOX_TEMPLATE));
+                    "", "", sc::CategoryRenderer(INFOBOX_TEMPLATE));
 
             {
                 // For each of the informations in the infobox, create a card
@@ -177,9 +177,13 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                     sc::CategorisedResult res(infobox_cat);
 
                     // Set informations
-                    res.set_uri(to_string(content.wiki_order));
+                    res.set_uri(queryResults.abstract.url);
                     res.set_title(content.label);
                     res["summary"] = content.value;
+
+                    // These are only for the preview
+                    res.set_art(queryResults.abstract.imageUrl);
+                    res["subtitle"] = "Source: " + queryResults.abstract.source;
 
                     // Push the result
                     if (!reply->push(res)) {
@@ -219,8 +223,9 @@ void Query::run(sc::SearchReplyProxy const& reply) {
 
         /**
          * Category
+         * We don't want this if we already have an infobox
          */
-        //if (!queryResults.empty()) {
+        if (queryResults.infobox.empty()) {
             // Register a category for the infobox
             auto category_cat = reply->register_category("category",
                     _("Lists"), "", sc::CategoryRenderer(CATEGORIES_TEMPLATE));
@@ -245,7 +250,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                     }
                 }
             }
-        //}
+        }
 
     } catch (domain_error &e) {
         // Handle exceptions being thrown by the client API
