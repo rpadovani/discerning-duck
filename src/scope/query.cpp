@@ -93,9 +93,9 @@ const static string CATEGORIES_TEMPLATE =
         {
             "schema-version": 1,
             "template": {
-                "category-layout": "vertical-journal",
-                "card-layout": "horizontal",
-                "card-size": "large"
+                "category-layout": "grid",
+                "overlay": true,
+                "card-size": "medium"
             },
             "components": {
                 "title": "title",
@@ -246,7 +246,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
         if (queryResults.infobox.empty()) {
             // Register a category for the infobox
             auto category_cat = reply->register_category("category",
-                    _("Lists"), "", sc::CategoryRenderer(CATEGORIES_TEMPLATE));
+                    queryResults.abstract.heading, "", sc::CategoryRenderer(CATEGORIES_TEMPLATE));
 
             {
                 // For each of the informations in the infobox, create a card
@@ -254,9 +254,13 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                     // Create a result
                     sc::CategorisedResult res(category_cat);
 
+                    // Take the title of the result
+                    std::size_t pos = content.text.find("-");
+                    res.set_title(content.text.substr(0, pos));
+
                     // Set informations
                     res.set_uri(content.url);
-                    res["summary"] = content.text;
+                    res["summary"] = content.text.substr(pos+2);
                     res.set_art(content.icon.url);
 
                     // Push the result

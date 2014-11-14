@@ -61,7 +61,7 @@ Client::QueryResults Client::queryResults(const string& query) {
     //
     // Until Scopes doesn't support html, ask to DuckDuckGo only plain text
     // responses
-    get( {"/"}, {{"q", query}, {"format", "json"}, {"no_html", "1"},
+    get( {}, {{"q", query}, {"format", "json"}, {"no_html", "1"},
             {"t", "discerningduck"}}, root);
     // e.g. http://api.duckduckgo.com/?q=QUERY&format=json&no_html=1&t=discerningduck
 
