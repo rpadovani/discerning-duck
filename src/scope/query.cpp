@@ -38,6 +38,7 @@ const static string ABSTRACT_TEMPLATE =
             },
             "components": {
                 "title": "title",
+                "subtitle": "subtitle",
                 "art" : {
                     "field": "art"
                 },
@@ -137,13 +138,9 @@ void Query::run(sc::SearchReplyProxy const& reply) {
          *  Abstract
          */
         if (!queryResults.abstract.textSummary.empty()) {
-            // Build up the title
-            stringstream ss(stringstream::in | stringstream::out);
-            ss << queryResults.abstract.heading;
-
             // Register a category for the abstract
-            auto abstract_cat = reply->register_category("abstract", ss.str(), "",
-                    sc::CategoryRenderer(ABSTRACT_TEMPLATE));
+            auto abstract_cat = reply->register_category("abstract",
+                    queryResults.abstract.heading, "", sc::CategoryRenderer(ABSTRACT_TEMPLATE));
 
             {
                 // Create a single result for the current abstract
@@ -154,6 +151,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                 res.set_title(queryResults.abstract.heading);
                 res.set_art(queryResults.abstract.imageUrl);
                 res["summary"] = queryResults.abstract.textSummary;
+                res["subtitle"] = "Source: " + queryResults.abstract.source;
 
                 // Push the result
                 if (!reply->push(res)) {
