@@ -150,7 +150,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                 sc::CategorisedResult res(abstract_cat);
 
                 // Set results
-                res.set_uri(queryResults.abstract.heading);
+                res.set_uri(queryResults.abstract.url);
                 res.set_title(queryResults.abstract.heading);
                 res.set_art(queryResults.abstract.imageUrl);
                 res["summary"] = queryResults.abstract.textSummary;

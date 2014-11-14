@@ -21,20 +21,22 @@ void Preview::cancelled() {
 }
 
 void Preview::run(sc::PreviewReplyProxy const& reply) {
+    sc::Result result = PreviewQueryBase::result();
+
     // Support three different column layouts
     sc::ColumnLayout layout1col(1), layout2col(2), layout3col(3);
 
     // Single column layout
-    layout1col.add_column( { "image", "header", "summary" });
+    layout1col.add_column( { "image", "header", "summary", "actionsId" });
 
     // Two column layout
     layout2col.add_column( { "image" });
-    layout2col.add_column( { "header", "summary" });
+    layout2col.add_column( { "header", "summary", "actionsId" });
 
     // Three cokumn layout
     layout3col.add_column( { "image" });
     layout3col.add_column( { "header", "summary" });
-    layout3col.add_column( { });
+    layout3col.add_column( { "actionsId" });
 
     // Register the layouts we just created
     reply->register_layout( { layout1col, layout2col, layout3col });
@@ -53,9 +55,19 @@ void Preview::run(sc::PreviewReplyProxy const& reply) {
     // Define the summary section
     sc::PreviewWidget description("summary", "text");
     // It has a text property, mapped to the result's description property
-    description.add_attribute_mapping("text", "description");
+    description.add_attribute_mapping("text", "summary");
+
+    // Define the action section
+    sc::PreviewWidget actions("actionsId", "actions");
+    sc::VariantBuilder builder;
+    builder.add_tuple({
+        {"id", sc::Variant("open")},
+        {"label", sc::Variant("Open")},
+        {"uri", result["uri"]}
+    });
+    actions.add_attribute_value("actions", builder.end());
 
     // Push each of the sections
-    reply->push( { image, header, description });
+    reply->push( { image, header, description, actions });
 }
 
