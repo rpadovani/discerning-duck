@@ -42,7 +42,8 @@ const static string ABSTRACT_TEMPLATE =
                 "art" : {
                     "field": "art"
                 },
-                "summary": "summary"
+                "summary": "summary",
+                "type": "type"
             }
         }
     )";
@@ -64,7 +65,8 @@ const static string INFOBOX_TEMPLATE =
             },
             "components": {
                 "title": "title",
-                "summary": "summary"
+                "summary": "summary",
+                "type": "type"
             }
         }
     )";
@@ -83,7 +85,8 @@ const static string ANSWER_TEMPLATE =
             },
             "components": {
                 "title": "title",
-                "summary": "summary"
+                "summary": "summary",
+                "type": "type"
             }
         }
     )";
@@ -106,7 +109,8 @@ const static string CATEGORIES_TEMPLATE =
                 "summary": "summary",
                 "art": {
                     "field": "art"
-                }
+                },
+                "type": "type"
             }
         }
     )";
@@ -128,7 +132,8 @@ const static string EMPTY_TEMPLATE =
             },
             "components": {
                 "title": "title",
-                "summary": "summary"
+                "summary": "summary",
+                "type": "type"
             }
         }
     )";
@@ -146,7 +151,8 @@ const static string FOOTER_TEMPLATE =
             },
             "components": {
                 "title": "title",
-                "summary": "summary"
+                "summary": "summary",
+                "type": "type"
             }
         }
     )";
@@ -275,9 +281,10 @@ void Query::run(sc::SearchReplyProxy const& reply) {
          * We don't want this if we already have an infobox
          */
         if (queryResults.infobox.empty() && queryResults.type == "C") {
-            // Register a category for the infobox
+            // Register a category for the category
             auto category_cat = reply->register_category("category",
-                    queryResults.abstract.heading, "", sc::CategoryRenderer(CATEGORIES_TEMPLATE));
+                    queryResults.abstract.heading, "",
+                    sc::CategoryRenderer(CATEGORIES_TEMPLATE));
 
             {
                 // For each element of the category
@@ -286,16 +293,19 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                     sc::CategorisedResult res(category_cat);
 
                     // Take the title of the result
-                    std::size_t pos = content.text.find("-");
-                    res.set_title(content.text.substr(0, pos));
+                    std::size_t startPos = content.result.find("\">") + 2;
+                    std::size_t endPos = content.result.find("</a>");
+                    res.set_title(content.result.substr(startPos, endPos - startPos));
+                    // 7 char: "</a> - "
+                    res["summary"] = content.result.substr(endPos+7);
 
-                    // Set informations
-                    res.set_uri(content.url);
-                    res["summary"] = content.text.substr(pos+2);
+                    // Remove https://www.duckduckgo.com/
+                    res.set_uri(content.url.substr(23));
                     res.set_art(content.icon.url);
 
                     // Only for the preview
                     res["subtitle"] = "Source: " + queryResults.abstract.source;
+                    res["type"] = queryResults.type;
 
                     // Push the result
                     if (!reply->push(res)) {
@@ -344,9 +354,10 @@ void Query::run(sc::SearchReplyProxy const& reply) {
             sc::CategorisedResult res(footer_cat);
 
             // Set informations
-            res.set_uri("DuckDuckGo");
+            std::string uri = "https://www.duckduckgo.com/?q=" + query_string;
+            res.set_uri(uri);
             res.set_title("ALPHA VERSION!");
-            res["summary"] = "All data come from DuckDuckGo API";
+            res["summary"] = "Results from DuckDuckGo";
 
             // Push the result
             if (!reply->push(res)) {
