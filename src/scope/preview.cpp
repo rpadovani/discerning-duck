@@ -61,22 +61,18 @@ void Preview::run(sc::PreviewReplyProxy const& reply) {
     sc::PreviewWidget actions("actionsId", "actions");
     sc::VariantBuilder builder;
 
+    std::string uri = result["uri"].get_string();
+    std::string label = "See more";
     if (result["type"] == sc::Variant("C")) {
-        std::string uri = "scope://discerningduck?q=" +
-            result["uri"].get_string();
-        builder.add_tuple({
-            {"id", sc::Variant("open")},
-            {"label", sc::Variant("Tell me more")},
-            {"uri", sc::Variant(uri)}
-        });
+        uri = "scope://com.ubuntu.developer.rpadovani.discerningduck_discerningduck?q=" +
+            uri;
+        label = "Tell me more";
     }
-    else {
-        builder.add_tuple({
-                {"id", sc::Variant("open")},
-                {"label", sc::Variant("See more")},
-                {"uri", result["uri"]}
-                });
-    }
+    builder.add_tuple({
+        {"id", sc::Variant("open")},
+        {"label", sc::Variant(label)},
+        {"uri", sc::Variant(uri)}
+    });
     actions.add_attribute_value("actions", builder.end());
 
     // Push each of the sections
