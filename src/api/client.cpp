@@ -93,7 +93,7 @@ Client::QueryResults Client::queryResults(const string& query) {
     queryResults.abstract.source = variantWithQ["AbstractSource"].toString().toStdString() != "" ?
         variantWithQ["AbstractSource"].toString().toStdString() :
         variantWithoutQ["AbstractSource"].toString().toStdString();
-    queryResults.abstract.url = variantWithQ["AbstractUrl"].toString().toStdString() != "" ?
+    queryResults.abstract.url = variantWithQ["AbstractURL"].toString().toStdString() != "" ?
         variantWithQ["AbstractURL"].toString().toStdString() :
         variantWithoutQ["AbstractURL"].toString().toStdString();
     queryResults.abstract.imageUrl = variantWithQ["Image"].toString().toStdString() != "" ?
