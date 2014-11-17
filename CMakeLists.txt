@@ -54,7 +54,7 @@ set(UBUNTU_PROJECT_TYPE "Scope" CACHE INTERNAL "Tells QtCreator this is a Scope 
 
 # Important project paths
 set(CMAKE_INSTALL_PREFIX /)
-set(SCOPE_INSTALL_DIR "/discerningduck")
+set(SCOPE_INSTALL_DIR "discerningduck")
 set(GETTEXT_PACKAGE "discerningduck")
 
 # If we need to refer to the scope's name or package in code, these definitions will help
