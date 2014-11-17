@@ -259,7 +259,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                 // Create a single result for the answer
                 sc::CategorisedResult res(answer_cat);
 
-                // We must have a URI
+                // We must have a URI, anyway we will not use it
                 res.set_uri(queryResults.answer.type);
                 res.set_title(queryResults.answer.type);
                 res["summary"] = queryResults.answer.instantAnswer;

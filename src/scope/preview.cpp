@@ -61,21 +61,29 @@ void Preview::run(sc::PreviewReplyProxy const& reply) {
     sc::PreviewWidget actions("actionsId", "actions");
     sc::VariantBuilder builder;
 
+    std::string scope_uri = "scope://com.ubuntu.developer.rpadovani.discerningduck_discerningduck?q=";
     std::string uri = result["uri"].get_string();
     std::string label = "See more";
+
+    // Focus on a character in a list
     if (result["type"] == sc::Variant("C")) {
-        uri = "scope://com.ubuntu.developer.rpadovani.discerningduck_discerningduck?q=" +
-            uri;
+        uri = scope_uri + uri;
         label = "Tell me more";
     }
+
     builder.add_tuple({
         {"id", sc::Variant("open")},
         {"label", sc::Variant(label)},
         {"uri", sc::Variant(uri)}
     });
+
     actions.add_attribute_value("actions", builder.end());
 
-    // Push each of the sections
-    reply->push( { image, header, description, actions });
+    // Push each of the sections, if are Answer there is nothing more
+    if (result["type"] == sc::Variant("E")) {
+        reply->push( { header, description });
+    } else {
+        reply->push( { image, header, description, actions });
+    }
 }
 
