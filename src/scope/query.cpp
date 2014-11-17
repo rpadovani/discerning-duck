@@ -116,8 +116,26 @@ const static string CATEGORIES_TEMPLATE =
     )";
 
 /**
- *
+ * This template is for disambiguation, it's similar to type C but it's D
  */
+const static string DISAMBIGUATION_TEMPLATE =
+    R"(
+        {
+            "schema-version": 1,
+            "template": {
+                "category-layout": "carousel",
+                "overlay": true
+            },
+            "components": {
+                "title": "title",
+                "summary": "summary",
+                "art": {
+                    "field": "art"
+                },
+                "type": "type"
+            }
+        }
+    )";
 
 /*
  * 404 page - Nothing return from the query
@@ -296,8 +314,49 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                     std::size_t startPos = content.result.find("\">") + 2;
                     std::size_t endPos = content.result.find("</a>");
                     res.set_title(content.result.substr(startPos, endPos - startPos));
-                    // 7 char: "</a> - "
+                    // 7 chars: "</a> - "
                     res["summary"] = content.result.substr(endPos+7);
+
+                    // Remove https://www.duckduckgo.com/
+                    res.set_uri(content.url.substr(23));
+                    res.set_art(content.icon.url);
+
+                    // Only for the preview
+                    res["subtitle"] = "Source: " + queryResults.abstract.source;
+                    res["type"] = queryResults.type;
+
+                    // Push the result
+                    if (!reply->push(res)) {
+                        // If we fail to push, it means the query has been cancelled.
+                        // So don't continue;
+                        return;
+                    }
+                }
+            }
+        }
+
+        /**
+         * Disambiguation
+         * We don't want this if we already have an infobox
+         */
+        if (queryResults.infobox.empty() && queryResults.type == "D") {
+            // Register a category for the category
+            auto disambiguation_cat = reply->register_category("disambiguation",
+                    "Meanings", "",
+                    sc::CategoryRenderer(DISAMBIGUATION_TEMPLATE));
+
+            {
+                // For each element of the category
+                for (const auto &content : queryResults.relatedTopics) {
+                    // Create a result
+                    sc::CategorisedResult res(disambiguation_cat);
+
+                    // Take the title of the result
+                    std::size_t startPos = content.result.find("\">") + 2;
+                    std::size_t endPos = content.result.find("</a>");
+                    res.set_title(content.result.substr(startPos, endPos - startPos));
+                    // 4 chars: "</a>"
+                    res["summary"] = content.result.substr(endPos+4);
 
                     // Remove https://www.duckduckgo.com/
                     res.set_uri(content.url.substr(23));
