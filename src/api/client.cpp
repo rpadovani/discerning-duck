@@ -53,7 +53,7 @@ void Client::get(const net::Uri::Path &path,
 }
 
 Client::QueryResults Client::queryResults(const string& query) {
-    QJsonDocument root;
+    QJsonDocument queryResultsWithQ, queryResultsWithoutQ;
 
     // Build a URI and get the contents.
     // The fist parameter forms the path part of the URI.
@@ -62,32 +62,74 @@ Client::QueryResults Client::queryResults(const string& query) {
     // Until Scopes doesn't support html, ask to DuckDuckGo only plain text
     // responses
     get( {}, {{"q", query}, {"format", "json"}, {"no_html", "1"},
-            {"t", "discerningduck"}}, root);
+            {"t", "discerningduck"}}, queryResultsWithQ);
     // e.g. http://api.duckduckgo.com/?q=QUERY&format=json&no_html=1&t=discerningduck
+    //
+    // The answer of these two queries sometimes are different, we need to
+    // take best of both
+    get( {query}, {{"format", "json"}, {"no_html", "1"},
+            {"t", "discerningduck"}}, queryResultsWithoutQ);
+    // e.g. http://api.duckduckgo.com/QUERY&format=json&no_html=1&t=discerningduck
+    //
+    // See https://api.duckduckgo.com/?q=ferrara&format=json&pretty=1 (no
+    // infobox) and https://api.duckduckgo.com/ferrara&format=json&pretty=1
+    //
+    // On the other hand, see
+    // https://api.duckduckgo.com/3*2&format=json&pretty=1 (no answer) and
+    // https://api.duckduckgo.com/?q=3*2&format=json&pretty=1
 
     QueryResults queryResults;
 
-    // Read out the abstract we found
-    QVariantMap variant = root.toVariant().toMap();
-    queryResults.abstract.summary = variant["Abstract"].toString().toStdString();
-    queryResults.abstract.textSummary = variant["AbstractText"].toString().toStdString();
-    queryResults.abstract.source = variant["AbstractSource"].toString().toStdString();
-    queryResults.abstract.url = variant["AbstractURL"].toString().toStdString();
-    queryResults.abstract.imageUrl = variant["Image"].toString().toStdString();
-    queryResults.abstract.heading = variant["Heading"].toString().toStdString();
+    // Read out the abstract we found and take best results
+    QVariantMap variantWithQ = queryResultsWithQ.toVariant().toMap();
+    QVariantMap variantWithoutQ = queryResultsWithoutQ.toVariant().toMap();
 
-    queryResults.answer.instantAnswer = variant["Answer"].toString().toStdString();
-    queryResults.answer.type = variant["AnswerType"].toString().toStdString();
+    queryResults.abstract.summary = variantWithQ["Abstract"].toString().toStdString() != "" ?
+        variantWithQ["Abstract"].toString().toStdString() :
+        variantWithoutQ["Abstract"].toString().toStdString();
+    queryResults.abstract.textSummary = variantWithQ["AbstractText"].toString().toStdString() != "" ?
+        variantWithQ["AbstractText"].toString().toStdString() :
+        variantWithoutQ["AbstractText"].toString().toStdString();
+    queryResults.abstract.source = variantWithQ["AbstractSource"].toString().toStdString() != "" ?
+        variantWithQ["AbstractSource"].toString().toStdString() :
+        variantWithoutQ["AbstractSource"].toString().toStdString();
+    queryResults.abstract.url = variantWithQ["AbstractUrl"].toString().toStdString() != "" ?
+        variantWithQ["AbstractURL"].toString().toStdString() :
+        variantWithoutQ["AbstractURL"].toString().toStdString();
+    queryResults.abstract.imageUrl = variantWithQ["Image"].toString().toStdString() != "" ?
+        variantWithQ["Image"].toString().toStdString() :
+        variantWithoutQ["Image"].toString().toStdString();
+    queryResults.abstract.heading = variantWithQ["Heading"].toString().toStdString() != "" ?
+        variantWithQ["Heading"].toString().toStdString() :
+        variantWithoutQ["Heading"].toString().toStdString();
 
-    queryResults.definition.definition = variant["Definition"].toString().toStdString();
-    queryResults.definition.source = variant["DefinitionSource"].toString().toStdString();
-    queryResults.definition.url = variant["DefinitionUrl"].toString().toStdString();
+    queryResults.answer.instantAnswer = variantWithQ["Answer"].toString().toStdString() != "" ?
+        variantWithQ["Answer"].toString().toStdString() :
+        variantWithoutQ["Answer"].toString().toStdString();
+    queryResults.answer.type = variantWithQ["AnswerType"].toString().toStdString() != "" ?
+        variantWithQ["AnswerType"].toString().toStdString() :
+        variantWithoutQ["AnswerType"].toString().toStdString();
 
-    queryResults.type = variant["Type"].toString().toStdString();
+    queryResults.definition.definition = variantWithQ["Definition"].toString().toStdString() != "" ?
+        variantWithQ["Definition"].toString().toStdString() :
+        variantWithoutQ["Definition"].toString().toStdString();
+    queryResults.definition.source = variantWithQ["DefinitionSource"].toString().toStdString() != "" ?
+        variantWithQ["DefinitionSource"].toString().toStdString() :
+        variantWithoutQ["DefinitionSouce"].toString().toStdString();
+    queryResults.definition.url = variantWithQ["DefinitionURL"].toString().toStdString() != "" ?
+        variantWithQ["DefinitionURL"].toString().toStdString() :
+        variantWithoutQ["DefinitionURL"].toString().toStdString();
 
-    QVariantMap infobox = variant["Infobox"].toMap();
+    queryResults.type = variantWithQ["Type"].toString().toStdString() != "" ?
+        variantWithQ["Type"].toString().toStdString() :
+        variantWithoutQ["Type"].toString().toStdString();
+
+    QVariantMap infobox = variantWithQ["Infobox"].toMap();
     QVariantList content = infobox["content"].toList();
+
+    int hasInfoboxData = 0;
     for (const QVariant &c : content) {
+        hasInfoboxData = 1;
         QVariantMap item = c.toMap();
         queryResults.infobox.emplace_back(
             Content {
@@ -99,8 +141,27 @@ Client::QueryResults Client::queryResults(const string& query) {
         );
     }
 
-    QVariantList related = variant["RelatedTopics"].toList();
+    if (hasInfoboxData == 0) {
+        infobox = variantWithoutQ["Infobox"].toMap();
+        content = infobox["content"].toList();
+
+        for (const QVariant &c : content) {
+            QVariantMap item = c.toMap();
+            queryResults.infobox.emplace_back(
+                Content {
+                    item["data_type"].toString().toStdString(),
+                    item["value"].toString().toStdString(),
+                    item["label"].toString().toStdString(),
+                    item["wiki_order"].toUInt()
+                }
+            );
+        }
+    }
+
+    int hasRelatedData = 0;
+    QVariantList related = variantWithQ["RelatedTopics"].toList();
     for (const QVariant &r : related) {
+        hasRelatedData = 1;
         QVariantMap result = r.toMap();
         QVariantMap icon = result["Icon"].toMap();
         queryResults.relatedTopics.emplace_back(
@@ -115,6 +176,26 @@ Client::QueryResults Client::queryResults(const string& query) {
                 result["Text"].toString().toStdString()
             }
         );
+    }
+
+    if (hasRelatedData == 0) {
+        related = variantWithoutQ["RelatedTopics"].toList();
+        for (const QVariant &r : related) {
+            QVariantMap result = r.toMap();
+            QVariantMap icon = result["Icon"].toMap();
+            queryResults.relatedTopics.emplace_back(
+                    Result {
+                        result["Result"].toString().toStdString(),
+                        result["FirstURL"].toString().toStdString(),
+                    Icon {
+                        icon["URL"].toString().toStdString(),
+                        icon["Height"].toUInt(),
+                        icon["Width"].toUInt()
+                    },
+                    result["Text"].toString().toStdString()
+                }
+            );
+        }
     }
 
     return queryResults;
