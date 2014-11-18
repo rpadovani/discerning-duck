@@ -42,7 +42,14 @@ sc::PreviewQueryBase::UPtr Scope::preview(sc::Result const& result,
     return sc::PreviewQueryBase::UPtr(new Preview(result, metadata));
 }
 
-ActivationQueryBase::UPtr  perform_action (Result const &result, ActionMetadata const &metadata, std::string const &widget_id, std::string const &action_id) { ...; result = ShowDash; }
+sc::ActivationQueryBase::UPtr Scope::perform_action(sc::Result const &result,
+                                                    sc::ActionMetadata const &metadata,
+                                                    std::string const &widget_id,
+                                                    std::string const &action_id) {
+    return sc::ActivationQueryBase::UPtr(new sc::ActivationResponse(
+                result, metadata));
+    //...; result = ShowDash;
+}
 
 #define EXPORT __attribute__ ((visibility ("default")))
 
