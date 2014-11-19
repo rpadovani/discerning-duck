@@ -267,6 +267,8 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                     res["subtitle"] = "Source: " + queryResults.abstract.source;
                 }
 
+                res["type"] = queryResults.type;
+
                 // Push the result
                 if (!reply->push(res)) {
                     // If we fail to push, it means the query has been cancelled.
