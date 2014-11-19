@@ -66,7 +66,7 @@ void Preview::run(sc::PreviewReplyProxy const& reply) {
     std::string label = "See more";
 
     // Focus on a character in a list
-    if (result["type"] == sc::Variant("C")) {
+    if (result["type"] == sc::Variant("C") || result["type"] == sc::Variant("D")) {
         uri = scope_uri + uri;
         label = "Tell me more";
     }
@@ -81,9 +81,10 @@ void Preview::run(sc::PreviewReplyProxy const& reply) {
 
     // Push each of the sections, if are Answer there is nothing more
     if (result["type"] == sc::Variant("E")) {
-        reply->push( { header, description });
+        reply->push({ header, description });
     } else {
-        reply->push( { image, header, description, actions });
+        reply->push ( { image, header, description, actions });
     }
+    return;
 }
 
