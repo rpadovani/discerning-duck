@@ -72,7 +72,7 @@ void Preview::run(sc::PreviewReplyProxy const& reply) {
     }
 
     builder.add_tuple({
-        {"id", sc::ActivationResponse::ShowDash},
+        {"id", sc::Variant("open")},
         {"label", sc::Variant(label)},
         {"uri", sc::Variant(uri)}
     });
