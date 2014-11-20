@@ -12,6 +12,22 @@ using namespace std;
 using namespace api;
 using namespace scope;
 
+class MyActivation : public sc::ActivationQueryBase
+{
+    public:
+        MyActivation(sc::Result const& result, sc::ActionMetadata const& metadata)
+            : ActivationQueryBase(result, metadata)
+        {
+        }
+
+        sc::ActivationResponse activate() override
+        {
+            sc::CannedQuery query("com.ubuntu.developer.rpadovani.discerningduck_discerningduck");
+            query.set_query_string("ciao");
+            return sc::ActivationResponse(query);
+        }
+};
+
 void Scope::start(string const&) {
     config_ = make_shared<Config>();
 
@@ -40,6 +56,14 @@ sc::PreviewQueryBase::UPtr Scope::preview(sc::Result const& result,
                                           sc::ActionMetadata const& metadata) {
     // Boilerplate construction of Preview
     return sc::PreviewQueryBase::UPtr(new Preview(result, metadata));
+}
+
+sc::ActivationQueryBase::UPtr Scope::perform_action(sc::Result const& result,
+        sc::ActionMetadata const& metadata,
+        std::string const& widget_id,
+        std::string const& action_id) {
+    // Custom implementation of preview action, when an uri isn't set
+    return sc::ActivationQueryBase::UPtr(new MyActivation(result, metadata));
 }
 
 #define EXPORT __attribute__ ((visibility ("default")))

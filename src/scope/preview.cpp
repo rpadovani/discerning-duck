@@ -61,21 +61,21 @@ void Preview::run(sc::PreviewReplyProxy const& reply) {
     sc::PreviewWidget actions("actionsId", "actions");
     sc::VariantBuilder builder;
 
-    std::string scope_uri = "scope://com.ubuntu.developer.rpadovani.discerningduck_discerningduck?q=";
     std::string uri = result["uri"].get_string();
-    std::string label = "See more";
 
     // Focus on a character in a list
     if (result["type"] == sc::Variant("C") || result["type"] == sc::Variant("D")) {
-        uri = scope_uri + uri;
-        label = "Tell me more";
+        builder.add_tuple({
+            {"id", sc::Variant("open")},
+            {"label", sc::Variant("Tell me more")}
+        });
+    } else {
+        builder.add_tuple({
+            {"id", sc::Variant("open")},
+            {"label", sc::Variant("See more")},
+            {"uri", sc::Variant(uri)}
+        });
     }
-
-    builder.add_tuple({
-        {"id", sc::Variant("open")},
-        {"label", sc::Variant(label)},
-        {"uri", sc::Variant(uri)}
-    });
 
     actions.add_attribute_value("actions", builder.end());
 

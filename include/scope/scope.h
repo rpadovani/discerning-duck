@@ -20,32 +20,41 @@ namespace scope {
  * if shared data structures are used.
  */
 class Scope: public unity::scopes::ScopeBase {
-public:
-    /**
-     * Called once at startup
-     */
-    void start(std::string const&) override;
+    public:
+        /**
+         * Called once at startup
+         */
+        void start(std::string const&) override;
 
-    /**
-     * Called at shutdown
-     */
-    void stop() override;
+        /**
+         * Called at shutdown
+         */
+        void stop() override;
 
-    /**
-     * Called each time a new preview is requested
-     */
-    unity::scopes::PreviewQueryBase::UPtr preview(const unity::scopes::Result&,
-                                                  const unity::scopes::ActionMetadata&) override;
+        /**
+         * Called each time a new preview is requested
+         */
+        unity::scopes::PreviewQueryBase::UPtr preview(const unity::scopes::Result&,
+                const unity::scopes::ActionMetadata&) override;
 
-    /**
-     * Called each time a new query is requested
-     */
-    unity::scopes::SearchQueryBase::UPtr search(
-            unity::scopes::CannedQuery const& q,
-            unity::scopes::SearchMetadata const&) override;
+        /**
+         * Called each time a new query is requested
+         */
+        unity::scopes::SearchQueryBase::UPtr search(
+                unity::scopes::CannedQuery const& q,
+                unity::scopes::SearchMetadata const&) override;
 
-protected:
-    api::Config::Ptr config_;
+        /**
+         * Called when user clicks on an action in the preview and no uri is set
+         */
+        virtual unity::scopes::ActivationQueryBase::UPtr perform_action(
+                unity::scopes::Result const& result,
+                unity::scopes::ActionMetadata const& metadata,
+                std::string const& widget_id,
+                std::string const& action_id) override;
+
+    protected:
+            api::Config::Ptr config_;
 };
 
 }
