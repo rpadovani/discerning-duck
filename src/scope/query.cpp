@@ -319,8 +319,11 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                     // 7 chars: "</a> - "
                     res["summary"] = content.result.substr(endPos+7);
 
+                    // Disabled due bug
+                    // https://bugs.launchpad.net/ubuntu/+source/unity-scopes-shell/+bug/1335761
                     // Remove https://www.duckduckgo.com/
-                    res.set_uri(content.url.substr(23));
+                    // res.set_uri(content.url.substr(23));
+                    res.set_uri(content.url);
                     res.set_art(content.icon.url);
 
                     // Only for the preview
@@ -361,7 +364,10 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                     res["summary"] = content.result.substr(endPos+4);
 
                     // Remove https://www.duckduckgo.com/
-                    res.set_uri(content.url.substr(23));
+                    // Disabled due bug
+                    // https://bugs.launchpad.net/ubuntu/+source/unity-scopes-shell/+bug/1335761
+                    //res.set_uri(content.url.substr(23));
+                    res.set_uri(content.url);
                     res.set_art(content.icon.url);
 
                     // Only for the preview

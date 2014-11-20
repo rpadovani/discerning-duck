@@ -66,10 +66,12 @@ void Preview::run(sc::PreviewReplyProxy const& reply) {
     std::string label = "See more";
 
     // Focus on a character in a list
-    if (result["type"] == sc::Variant("C") || result["type"] == sc::Variant("D")) {
-        uri = scope_uri + uri;
-        label = "Tell me more";
-    }
+    // Disabled due bug
+    // https://bugs.launchpad.net/ubuntu/+source/unity-scopes-shell/+bug/1335761
+//    if (result["type"] == sc::Variant("C") || result["type"] == sc::Variant("D")) {
+//        uri = scope_uri + uri;
+//        label = "Tell me more";
+//    }
 
     builder.add_tuple({
         {"id", sc::Variant("open")},
