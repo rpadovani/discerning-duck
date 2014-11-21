@@ -55,6 +55,24 @@ void Client::get(const net::Uri::Path &path,
 Client::QueryResults Client::queryResults(const string& query) {
     QJsonDocument queryResultsWithQ, queryResultsWithoutQ;
 
+    // We want to create special queries for the homepage, to have a better
+    // experience
+    // So we check if this is the query for the home
+    if (query == "com.ubuntu.ddg") {
+        Homepage homepage;
+        // First of all, we want a random fortune cookie :-)
+        get( {}, {{"q", "fortune cookie"}, {"format", "json"}, {"no_html", "1"},
+                {"t", "discerningduck"}}, fortuneCookie);
+
+        QVariantMap fortune = fortuneCookie.toVariant().toMap();
+        homepage.fortune = fortune["Answer"].toString().toStdString();
+
+        return homepage;
+
+    }
+
+    QueryResults queryResults;
+
     // Build a URI and get the contents.
     // The fist parameter forms the path part of the URI.
     // The second parameter forms the CGI parameters.
@@ -77,8 +95,6 @@ Client::QueryResults Client::queryResults(const string& query) {
     // On the other hand, see
     // https://api.duckduckgo.com/3*2&format=json&pretty=1 (no answer) and
     // https://api.duckduckgo.com/?q=3*2&format=json&pretty=1
-
-    QueryResults queryResults;
 
     // Read out the abstract we found and take best results
     QVariantMap variantWithQ = queryResultsWithQ.toVariant().toMap();
@@ -184,9 +200,9 @@ Client::QueryResults Client::queryResults(const string& query) {
             QVariantMap result = r.toMap();
             QVariantMap icon = result["Icon"].toMap();
             queryResults.relatedTopics.emplace_back(
-                    Result {
-                        result["Result"].toString().toStdString(),
-                        result["FirstURL"].toString().toStdString(),
+                Result {
+                    result["Result"].toString().toStdString(),
+                    result["FirstURL"].toString().toStdString(),
                     Icon {
                         icon["URL"].toString().toStdString(),
                         icon["Height"].toUInt(),

@@ -194,9 +194,8 @@ void Query::run(sc::SearchReplyProxy const& reply) {
 
         Client::QueryResults queryResults;
         if (query_string.empty()) {
-            // If the string is empty, get informations about DuckDuckGo
-            // TODO: create a better default page
-            queryResults = client_.queryResults("DuckDuckGo");
+            // Default page is managed by this special query
+            queryResults = client_.queryResults("com.ubuntu.ddg");
         } else {
             // otherwise, process the query
             queryResults = client_.queryResults(query_string);
