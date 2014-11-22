@@ -17,7 +17,6 @@ Client::Client(Config::Ptr config) :
     config_(config), cancelled_(false) {
 }
 
-
 void Client::get(const net::Uri::Path &path,
                  const net::Uri::QueryParameters &parameters, QJsonDocument &root) {
     // Create a new HTTP client
@@ -52,25 +51,30 @@ void Client::get(const net::Uri::Path &path,
     }
 }
 
+Client::HomePage Client::homepageResults(const string &query) {
+    QJsonDocument fortuneCookie, sunriseQuery;
+    HomePage homepage;
+    // First of all, we want a random fortune cookie :-)
+    get( {}, {{"q", "fortune cookie"}, {"format", "json"}, {"no_html", "1"},
+            {"t", "discerningduck"}}, fortuneCookie);
+
+    QVariantMap fortune = fortuneCookie.toVariant().toMap();
+    homepage.fortune.instantAnswer = fortune["Answer"].toString().toStdString();
+    homepage.fortune.type = fortune["AnswerType"].toString().toStdString();
+
+    // Sunrise of the day
+    // TODO: add location
+    get( {}, {{"q", "sunrise"}, {"format", "json"}, {"no_html", "1"},
+            {"t", "discerningduck"}}, sunriseQuery);
+
+    QVariantMap sunrise = sunriseQuery.toVariant().toMap();
+    homepage.sunrise.instantAnswer = sunrise["Answer"].toString().toStdString();
+    homepage.sunrise.type = sunrise["AnswerType"].toString().toStdString();
+    return homepage;
+}
+
 Client::QueryResults Client::queryResults(const string& query) {
     QJsonDocument queryResultsWithQ, queryResultsWithoutQ;
-
-    // We want to create special queries for the homepage, to have a better
-    // experience
-    // So we check if this is the query for the home
-    if (query == "com.ubuntu.ddg") {
-        Homepage homepage;
-        // First of all, we want a random fortune cookie :-)
-        get( {}, {{"q", "fortune cookie"}, {"format", "json"}, {"no_html", "1"},
-                {"t", "discerningduck"}}, fortuneCookie);
-
-        QVariantMap fortune = fortuneCookie.toVariant().toMap();
-        homepage.fortune = fortune["Answer"].toString().toStdString();
-
-        return homepage;
-
-    }
-
     QueryResults queryResults;
 
     // Build a URI and get the contents.
