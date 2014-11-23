@@ -204,39 +204,21 @@ void Query::run(sc::SearchReplyProxy const& reply) {
             {
                 sc::CategorisedResult res(sunrise_cat);
 
-                // We set the uri to don't have any action in the previw
-                res.set_uri("fortune.ddg.home");
-                res.set_title("Sunrise");
-
                 std::string sunrise = homepage.sunrise.instantAnswer;
 
-                // Take the sunrise
-                std::size_t startPos = sunrise.find("<span class='suninfo--risebox'>");
-                std::size_t endPos = sunrise.find("<span class='suninfo--setbox'>");
-                res["summary"] = sunrise.substr(startPos, endPos - startPos);
-
-                // Push the result
-                if (!reply->push(res)) {
-                    // If we fail to push, it means the query has been cancelled.
-                    // So don't continue;
-                    return;
-                }
-            }
-
-            auto sunset_cat = reply->register_category("sunset",
-                "", "", sc::CategoryRenderer(INFOBOX_TEMPLATE));
-            {
-                sc::CategorisedResult res(sunset_cat);
-
                 // We set the uri to don't have any action in the previw
                 res.set_uri("fortune.ddg.home");
-                res.set_title("Sunset");
 
-                std::string sunset = homepage.sunrise.instantAnswer;
+                // Remove @</span> from the title
+                std::size_t startPos = sunrise.find("@") + 8;
+                std::size_t endPos = sunrise.find("</div>");
+                std::string title =  "Sunrise and sunset at ";
+                title += sunrise.substr(startPos, endPos - startPos);
+                res.set_title(title);
 
-                // Take the sunset
-                std::size_t startPos = sunset.find("<span class='suninfo--setbox'>");
-                res["summary"] = sunset.substr(startPos);
+                // Take the sunrise and the sunset
+                startPos = sunrise.find("<span class='suninfo--risebox'>");
+                res["summary"] = sunrise.substr(startPos);
 
                 // Push the result
                 if (!reply->push(res)) {

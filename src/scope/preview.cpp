@@ -82,7 +82,7 @@ void Preview::run(sc::PreviewReplyProxy const& reply) {
     actions.add_attribute_value("actions", builder.end());
 
     // Push each of the sections, if are Answer there is nothing more
-    // The fortune in the homepage doesn't have click
+    // Home page have nothing in the preview
     if (result["type"] == sc::Variant("E") || uri == "fortune.ddg.home") {
         reply->push({ header, description });
     } else {
