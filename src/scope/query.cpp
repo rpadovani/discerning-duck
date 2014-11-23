@@ -192,11 +192,79 @@ void Query::run(sc::SearchReplyProxy const& reply) {
         // Trim the query string of whitespace
         string query_string = alg::trim_copy(query.query_string());
 
-
         if (query_string.empty()) {
             // Default page is managed by this special query
             Client::HomePage homepage;
             homepage = client_.homepageResults("com.ubuntu.ddg");
+
+            // Sunrise and sunset, we need to take only data we need and put
+            // in right infobox
+            auto sunrise_cat = reply->register_category("sunrise",
+                "", "", sc::CategoryRenderer(INFOBOX_TEMPLATE));
+            {
+                sc::CategorisedResult res(sunrise_cat);
+
+                // We set the uri to don't have any action in the previw
+                res.set_uri("fortune.ddg.home");
+                res.set_title("Sunrise");
+
+                std::string sunrise = homepage.sunrise.instantAnswer;
+
+                // Take the sunrise
+                std::size_t startPos = sunrise.find("<span class='suninfo--risebox'>");
+                std::size_t endPos = sunrise.find("<span class='suninfo--setbox'>");
+                res["summary"] = sunrise.substr(startPos, endPos - startPos);
+
+                // Push the result
+                if (!reply->push(res)) {
+                    // If we fail to push, it means the query has been cancelled.
+                    // So don't continue;
+                    return;
+                }
+            }
+
+            auto sunset_cat = reply->register_category("sunset",
+                "", "", sc::CategoryRenderer(INFOBOX_TEMPLATE));
+            {
+                sc::CategorisedResult res(sunset_cat);
+
+                // We set the uri to don't have any action in the previw
+                res.set_uri("fortune.ddg.home");
+                res.set_title("Sunset");
+
+                std::string sunset = homepage.sunrise.instantAnswer;
+
+                // Take the sunset
+                std::size_t startPos = sunset.find("<span class='suninfo--setbox'>");
+                res["summary"] = sunset.substr(startPos);
+
+                // Push the result
+                if (!reply->push(res)) {
+                    // If we fail to push, it means the query has been cancelled.
+                    // So don't continue;
+                    return;
+                }
+            }
+
+            // Fortune cookie, we use the same template we use for infobox
+            auto fortune_cat = reply->register_category("fortune",
+                "", "", sc::CategoryRenderer(INFOBOX_TEMPLATE));
+
+            {
+                sc::CategorisedResult res(fortune_cat);
+
+                // We set the uri to don't have any action in the preview
+                res.set_uri("fortune.ddg.home");
+                res.set_title("Fortune cookie");
+                res["summary"] = homepage.fortune.instantAnswer;
+
+                // Push the result
+                if (!reply->push(res)) {
+                    // If we fail to push, it means the query has been cancelled.
+                    // So don't continue;
+                    return;
+                }
+            }
         } else {
             // otherwise, process the query
             Client::QueryResults queryResults;

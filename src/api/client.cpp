@@ -64,7 +64,7 @@ Client::HomePage Client::homepageResults(const string &query) {
 
     // Sunrise of the day
     // TODO: add location
-    get( {}, {{"q", "sunrise"}, {"format", "json"}, {"no_html", "1"},
+    get( {}, {{"q", "sunrise"}, {"format", "json"},
             {"t", "discerningduck"}}, sunriseQuery);
 
     QVariantMap sunrise = sunriseQuery.toVariant().toMap();
@@ -81,7 +81,7 @@ Client::QueryResults Client::queryResults(const string& query) {
     // The fist parameter forms the path part of the URI.
     // The second parameter forms the CGI parameters.
     //
-    // Until Scopes doesn't support html, ask to DuckDuckGo only plain text
+    // Because some html answers don't work, ask to DuckDuckGo only plain text
     // responses
     get( {}, {{"q", query}, {"format", "json"}, {"no_html", "1"},
             {"t", "discerningduck"}}, queryResultsWithQ);
