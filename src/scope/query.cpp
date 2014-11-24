@@ -156,24 +156,6 @@ const static string EMPTY_TEMPLATE =
         }
     )";
 
-/*
- * Footer
- */
-const static string FOOTER_TEMPLATE =
-    R"(
-        {
-            "schema-version": 1,
-            "template": {
-                "category-layout": "grid",
-            },
-            "components": {
-                "title": "title",
-                "subtitle": "subtitle",
-                "type": "type"
-            }
-        }
-    )";
-
 Query::Query(const sc::CannedQuery &query, const sc::SearchMetadata &metadata,
              Config::Ptr config) :
     sc::SearchQueryBase(query, metadata), client_(config) {
@@ -253,7 +235,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
              */
             // Register a category for the footer
              auto footer_cat = reply->register_category("footer",
-                _(""), "", sc::CategoryRenderer(EMPTY_TEMPLATE));
+                _(""), "", sc::CategoryRenderer(INFOBOX_TEMPLATE));
 
              {
                 // Create a result
@@ -263,7 +245,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                 std::string uri = "https://www.duckduckgo.com/?q=" + query_string;
                 res.set_uri(uri);
                 res.set_title("Discerning Duck 0.1.1");
-                res["subtitle"] = "Results from DuckDuckGo";
+                res["summary"] = "Results from DuckDuckGo";
 
                 // Push the result
                 if (!reply->push(res)) {
@@ -489,7 +471,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
              */
             // Register a category for the footer
             auto footer_cat = reply->register_category("footer",
-                    _(""), "", sc::CategoryRenderer(EMPTY_TEMPLATE));
+                    _(""), "", sc::CategoryRenderer(INFOBOX_TEMPLATE));
 
             {
                 // Create a result
@@ -499,7 +481,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                 std::string uri = "https://www.duckduckgo.com/?q=" + query_string;
                 res.set_uri(uri);
                 res.set_title("Discerning Duck 0.1.1");
-                res["subtitle"] = "Results from DuckDuckGo";
+                res["summary"] = "Results from DuckDuckGo";
 
                 // Push the result
                 if (!reply->push(res)) {
