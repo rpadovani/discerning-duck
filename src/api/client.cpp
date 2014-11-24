@@ -17,7 +17,6 @@ Client::Client(Config::Ptr config) :
     config_(config), cancelled_(false) {
 }
 
-
 void Client::get(const net::Uri::Path &path,
                  const net::Uri::QueryParameters &parameters, QJsonDocument &root) {
     // Create a new HTTP client
@@ -52,14 +51,37 @@ void Client::get(const net::Uri::Path &path,
     }
 }
 
+Client::HomePage Client::homepageResults(const string &query) {
+    QJsonDocument fortuneCookie, sunriseQuery;
+    HomePage homepage;
+    // First of all, we want a random fortune cookie :-)
+    get( {}, {{"q", "fortune cookie"}, {"format", "json"}, {"no_html", "1"},
+            {"t", "discerningduck"}}, fortuneCookie);
+
+    QVariantMap fortune = fortuneCookie.toVariant().toMap();
+    homepage.fortune.instantAnswer = fortune["Answer"].toString().toStdString();
+    homepage.fortune.type = fortune["AnswerType"].toString().toStdString();
+
+    // Sunrise of the day
+    // TODO: add location
+    get( {}, {{"q", "sunrise"}, {"format", "json"},
+            {"t", "discerningduck"}}, sunriseQuery);
+
+    QVariantMap sunrise = sunriseQuery.toVariant().toMap();
+    homepage.sunrise.instantAnswer = sunrise["Answer"].toString().toStdString();
+    homepage.sunrise.type = sunrise["AnswerType"].toString().toStdString();
+    return homepage;
+}
+
 Client::QueryResults Client::queryResults(const string& query) {
     QJsonDocument queryResultsWithQ, queryResultsWithoutQ;
+    QueryResults queryResults;
 
     // Build a URI and get the contents.
     // The fist parameter forms the path part of the URI.
     // The second parameter forms the CGI parameters.
     //
-    // Until Scopes doesn't support html, ask to DuckDuckGo only plain text
+    // Because some html answers don't work, ask to DuckDuckGo only plain text
     // responses
     get( {}, {{"q", query}, {"format", "json"}, {"no_html", "1"},
             {"t", "discerningduck"}}, queryResultsWithQ);
@@ -77,8 +99,6 @@ Client::QueryResults Client::queryResults(const string& query) {
     // On the other hand, see
     // https://api.duckduckgo.com/3*2&format=json&pretty=1 (no answer) and
     // https://api.duckduckgo.com/?q=3*2&format=json&pretty=1
-
-    QueryResults queryResults;
 
     // Read out the abstract we found and take best results
     QVariantMap variantWithQ = queryResultsWithQ.toVariant().toMap();
@@ -184,9 +204,9 @@ Client::QueryResults Client::queryResults(const string& query) {
             QVariantMap result = r.toMap();
             QVariantMap icon = result["Icon"].toMap();
             queryResults.relatedTopics.emplace_back(
-                    Result {
-                        result["Result"].toString().toStdString(),
-                        result["FirstURL"].toString().toStdString(),
+                Result {
+                    result["Result"].toString().toStdString(),
+                    result["FirstURL"].toString().toStdString(),
                     Icon {
                         icon["URL"].toString().toStdString(),
                         icon["Height"].toUInt(),

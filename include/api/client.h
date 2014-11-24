@@ -119,13 +119,25 @@ public:
             }
     };
 
+    public: class HomePage {
+        public:
+            Answer fortune;
+            Answer sunrise;
+
+            bool isEmpty() {
+                return fortune.type.empty() &&
+                    sunrise.type.empty();
+            }
+    };
+
     Client(Config::Ptr config);
 
     virtual ~Client() = default;
     /*
-     * Get the result of a query
+     * Get the result of a query or of the homepage
      */
     virtual QueryResults queryResults(const std::string &query);
+    virtual HomePage homepageResults(const std::string &query);
 
     /**
      * Cancel any pending queries (this method can be called from a different thread)
