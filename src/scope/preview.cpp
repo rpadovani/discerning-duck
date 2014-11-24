@@ -84,8 +84,10 @@ void Preview::run(sc::PreviewReplyProxy const& reply) {
     // Push each of the sections, if are Answer there is nothing more
     if (result["type"] == sc::Variant("E")) {
         reply->push({ header, description });
+    } else if (result["art"].is_null()) {
+        reply->push({ header, description, actions });
     } else {
-        reply->push ( { image, header, description, actions });
+        reply->push({ image, header, description, actions });
     }
     return;
 }
