@@ -244,7 +244,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                 // Set informations
                 std::string uri = "https://www.duckduckgo.com/?q=" + query_string;
                 res.set_uri(uri);
-                res.set_title("Discerning Duck 0.1.1");
+                res.set_title("Discerning Duck 0.1.2");
                 res["summary"] = "Results from DuckDuckGo";
 
                 // Push the result
@@ -480,7 +480,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                 // Set informations
                 std::string uri = "https://www.duckduckgo.com/?q=" + query_string;
                 res.set_uri(uri);
-                res.set_title("Discerning Duck 0.1.1");
+                res.set_title("Discerning Duck 0.1.2");
                 res["summary"] = "Results from DuckDuckGo";
 
                 // Push the result
