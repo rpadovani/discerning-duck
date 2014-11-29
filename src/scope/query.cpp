@@ -254,6 +254,31 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                     return;
                 }
             }
+
+            /**
+             * 404: nothing found!
+             */
+            if (homepage.isEmpty()) {
+                auto empty_cat = reply->register_category("empty",
+                        _("Nothing found"), "", sc::CategoryRenderer(EMPTY_TEMPLATE));
+
+                {
+                    // Create a result
+                    sc::CategorisedResult res(empty_cat);
+
+                    // Set informations
+                    res.set_uri("1");
+                    res.set_title("No connection detected");
+                    res["summary"] = "I don't find any connection. Please, check your connectivity and try again";
+
+                    // Push the result
+                    if (!reply->push(res)) {
+                        // If we fail to push, it means the query has been cancelled.
+                        // So don't continue;
+                        return;
+                    }
+                }
+            }
         } else {
             // otherwise, process the query
             Client::QueryResults queryResults;
