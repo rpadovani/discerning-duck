@@ -478,9 +478,11 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                     sc::CategorisedResult res(empty_cat);
 
                     // Set informations
-                    res.set_uri("1");
+                    std::string uri = "https://www.duckduckgo.com/?q=" + query_string;
+                    res.set_uri(uri);
                     res.set_title("Nothing here");
                     res["summary"] = "Unfortunately, I'm not a search engine, but only a Discerning Duck - I cannot provide you results, but only answers. Please try another search :-)";
+                    res["labelText"] = "Results on DDG";
 
                     // Push the result
                     if (!reply->push(res)) {
