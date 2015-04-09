@@ -63,7 +63,12 @@ void Preview::run(sc::PreviewReplyProxy const& reply) {
 
     std::string scope_uri = "scope://com.ubuntu.developer.rpadovani.discerningduck_discerningduck?q=";
     std::string uri = result["uri"].get_string();
-    std::string label = "See more";
+    std::string label;
+    if (result.contains("labelText")) {
+        label = result["labelText"].get_string();
+    } else {
+        label = "See more";
+    }
 
     // Focus on a character in a list
     // Disabled due bug
