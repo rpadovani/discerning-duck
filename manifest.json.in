@@ -1,7 +1,7 @@
 {
     "architecture": "armhf",
     "description": "Ask to the most discerning duck on the web: DuckDuckGo! It will have answer for every question you have",
-    "framework": "ubuntu-sdk-14.10-dev2",
+    "framework": "ubuntu-sdk-15.04",
     "hooks": {
         "discerningduck": {
             "apparmor": "discerningduck.apparmor",
@@ -11,5 +11,5 @@
     "maintainer": "Riccardo Padovani <rpadovani@ubuntu.com>",
     "name": "com.ubuntu.developer.rpadovani.discerningduck",
     "title": "Discerning Duck",
-    "version": "0.1.2"
+    "version": "0.1.3"
 }
